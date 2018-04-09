@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pb "github.com/infoslack/go-microservice/consignment-service/proto/consignment"
+	vesselProto "github.com/infoslack/go-microservice/vessel-service/proto/vessel"
 	micro "github.com/micro/go-micro"
 )
 
@@ -31,10 +33,22 @@ func (repo *ConsignmentRepository) GetAll() []*pb.Consignment {
 //Check the interface in the protobuf generated code
 //for the exact method signatures
 type service struct {
-	repo Repository
+	repo         Repository
+	vesselClient vesselProto.VesselServiceClient
 }
 
 func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, res *pb.Response) error {
+
+	vesselResponse, err := s.vesselClient.FindAvailable(context.Background(), &vesselProto.Specification{
+		MaxWeight: req.Weight,
+		Capacity:  int32(len(req.Containers)),
+	})
+	log.Printf("Found vessel: %s \n", vesselResponse.Vessel.Name)
+	if err != nil {
+		return err
+	}
+
+	req.VesselId = vesselResponse.Vessel.Id
 
 	consignment, err := s.repo.Create(req)
 	if err != nil {
@@ -62,9 +76,11 @@ func main() {
 		micro.Version("latest"),
 	)
 
+	vesselClient := vesselProto.NewVesselServiceClient("go.micro.srv.vessel", srv.Client())
+
 	srv.Init()
 
-	pb.RegisterShippingServiceHandler(srv.Server(), &service{repo})
+	pb.RegisterShippingServiceHandler(srv.Server(), &service{repo, vesselClient})
 
 	if err := srv.Run(); err != nil {
 		fmt.Println(err)
