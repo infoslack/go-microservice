@@ -12,7 +12,9 @@ import (
 	"github.com/micro/go-micro/cmd"
 )
 
-const defaultFilename = "consignment.json"
+const (
+	defaultFilename = "consignment.json"
+)
 
 func parseFile(file string) (*pb.Consignment, error) {
 	var consignment *pb.Consignment
@@ -30,7 +32,7 @@ func main() {
 
 	cmd.Init()
 
-	client := pb.NewShippingServiceClient("go.micro.srv.consignment", microclient.DefaultClient)
+	cl := pb.NewShippingServiceClient("go.micro.srv.consignment", microclient.DefaultClient)
 
 	file := defaultFilename
 	if len(os.Args) > 1 {
@@ -43,13 +45,13 @@ func main() {
 		log.Fatalf("Couldn't parse file: %v", err)
 	}
 
-	r, err := client.CreateConsignment(context.TODO(), consignment)
+	r, err := cl.CreateConsignment(context.TODO(), consignment)
 	if err != nil {
 		log.Fatalf("Couldn't create: %v", err)
 	}
 	log.Printf("Created: %t", r.Created)
 
-	getAll, err := client.GetConsignments(context.Background(), &pb.GetRequest{})
+	getAll, err := cl.GetConsignments(context.Background(), &pb.GetRequest{})
 	if err != nil {
 		log.Fatalf("Couldn't list consignments: %v", err)
 	}

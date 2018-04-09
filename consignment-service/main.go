@@ -8,30 +8,30 @@ import (
 	micro "github.com/micro/go-micro"
 )
 
-type IRepository interface {
+type Repository interface {
 	Create(*pb.Consignment) (*pb.Consignment, error)
 	GetAll() []*pb.Consignment
 }
 
 // Simulates the use of a datastore
-type Repository struct {
+type ConsignmentRepository struct {
 	consignments []*pb.Consignment
 }
 
-func (repo *Repository) Create(consignment *pb.Consignment) (*pb.Consignment, error) {
+func (repo *ConsignmentRepository) Create(consignment *pb.Consignment) (*pb.Consignment, error) {
 	updated := append(repo.consignments, consignment)
 	repo.consignments = updated
 	return consignment, nil
 }
 
-func (repo *Repository) GetAll() []*pb.Consignment {
+func (repo *ConsignmentRepository) GetAll() []*pb.Consignment {
 	return repo.consignments
 }
 
 //Check the interface in the protobuf generated code
 //for the exact method signatures
 type service struct {
-	repo IRepository
+	repo Repository
 }
 
 func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, res *pb.Response) error {
@@ -53,7 +53,7 @@ func (s *service) GetConsignments(ctx context.Context, req *pb.GetRequest, res *
 }
 
 func main() {
-	repo := &Repository{}
+	repo := &ConsignmentRepository{}
 
 	// Create a new service
 	srv := micro.NewService(
@@ -64,7 +64,7 @@ func main() {
 
 	srv.Init()
 
-	pb.RegisterShippingServiceServer(srv.Server(), &service{repo})
+	pb.RegisterShippingServiceHandler(srv.Server(), &service{repo})
 
 	if err := srv.Run(); err != nil {
 		fmt.Println(err)
