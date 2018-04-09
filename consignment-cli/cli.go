@@ -8,13 +8,11 @@ import (
 	"os"
 
 	pb "github.com/infoslack/go-microservice/consignment-service/proto/consignment"
-	"google.golang.org/grpc"
+	microclient "github.com/micro/go-micro/client"
+	"github.com/micro/go-micro/cmd"
 )
 
-const (
-	address         = "localhost:50051"
-	defaultFilename = "consignment.json"
-)
+const defaultFilename = "consignment.json"
 
 func parseFile(file string) (*pb.Consignment, error) {
 	var consignment *pb.Consignment
@@ -29,13 +27,10 @@ func parseFile(file string) (*pb.Consignment, error) {
 }
 
 func main() {
-	// connection to the server
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Didn't connect: %v", err)
-	}
-	defer conn.Close()
-	client := pb.NewShippingServiceClient(conn)
+
+	cmd.Init()
+
+	client := pb.NewShippingServiceClient("go.micro.srv.consignment", microclient.DefaultClient)
 
 	file := defaultFilename
 	if len(os.Args) > 1 {
@@ -43,19 +38,20 @@ func main() {
 	}
 
 	consignment, err := parseFile(file)
+
 	if err != nil {
 		log.Fatalf("Couldn't parse file: %v", err)
 	}
 
-	r, err := client.CreateConsignment(context.Background(), consignment)
+	r, err := client.CreateConsignment(context.TODO(), consignment)
 	if err != nil {
-		log.Fatalf("Couldn't no greet: %v", err)
+		log.Fatalf("Couldn't create: %v", err)
 	}
 	log.Printf("Created: %t", r.Created)
 
 	getAll, err := client.GetConsignments(context.Background(), &pb.GetRequest{})
 	if err != nil {
-		log.Fatalf("Couldn't not list consignments: %v", err)
+		log.Fatalf("Couldn't list consignments: %v", err)
 	}
 
 	for _, v := range getAll.Consignments {
