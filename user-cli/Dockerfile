@@ -8,6 +8,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo .
 FROM alpine:latest
 RUN apk add --update ca-certificates
 WORKDIR /app
-COPY consignment.json .
 COPY --from=builder /go/src/github.com/infoslack/go-microservice/user-cli/user-cli .
 ENTRYPOINT ["./user-cli"]
