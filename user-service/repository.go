@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "github.com/infoslack/go-microservice/user-service/proto/user"
+	pb "github.com/infoslack/go-microservice/user-service/proto/auth"
 	"github.com/jinzhu/gorm"
 )
 

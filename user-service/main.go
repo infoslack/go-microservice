@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	pb "github.com/infoslack/go-microservice/user-service/proto/user"
+	pb "github.com/infoslack/go-microservice/user-service/proto/auth"
 	micro "github.com/micro/go-micro"
 )
 
