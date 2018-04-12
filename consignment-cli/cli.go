@@ -11,6 +11,7 @@ import (
 	pb "github.com/infoslack/go-microservice/consignment-service/proto/consignment"
 	microclient "github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/cmd"
+	"github.com/micro/go-micro/metadata"
 )
 
 const (
@@ -43,7 +44,7 @@ func main() {
 		log.Fatal(errors.New("Not enough arguments, expecting file and token."))
 	}
 
-	file os.Args[1]
+	file = os.Args[1]
 	token = os.Args[2]
 
 	consignment, err := parseFile(file)
@@ -52,7 +53,7 @@ func main() {
 		"token": token,
 	})
 
-	r, err := client.CreateConsignment(ctx, consignment)
+	r, err := cl.CreateConsignment(ctx, consignment)
 	if err != nil {
 		log.Fatalf("Couldn't create: %v", err)
 	}

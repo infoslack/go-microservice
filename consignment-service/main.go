@@ -8,9 +8,10 @@ import (
 	"os"
 
 	pb "github.com/infoslack/go-microservice/consignment-service/proto/consignment"
+	userService "github.com/infoslack/go-microservice/user-service/proto/auth"
 	vesselProto "github.com/infoslack/go-microservice/vessel-service/proto/vessel"
-	userService "github.com/infoslack/user-service/proto/auth"
 	micro "github.com/micro/go-micro"
+	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/metadata"
 	"github.com/micro/go-micro/server"
 )
@@ -56,9 +57,6 @@ func main() {
 
 func AuthWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, resp interface{}) error {
-		if os.Getenv("DISABLE_AUTH") == "true" {
-			return fn(ctx, req, resp)
-		}
 		meta, ok := metadata.FromContext(ctx)
 		if !ok {
 			return errors.New("no auth meta-data found in request")
@@ -68,13 +66,16 @@ func AuthWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		log.Println("Authenticating with token: ", token)
 
 		// Auth here
-		authClient := userService.NewAuthClient("shippy.user", srv.Client())
-		_, err := authClient.ValidateToken(ctx, &userService.Token{
+		authClient := userService.NewAuthClient("shippy.user", client.DefaultClient)
+		authResp, err := authClient.ValidateToken(ctx, &userService.Token{
 			Token: token,
 		})
+		log.Println("Auth resp:", authResp)
+		log.Println("Err:", err)
 		if err != nil {
 			return err
 		}
+
 		err = fn(ctx, req, resp)
 		return err
 	}
