@@ -7,6 +7,7 @@ import (
 	"log"
 
 	pb "github.com/infoslack/go-microservice/user-service/proto/auth"
+	micro "github.com/micro/go-micro"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,6 +16,7 @@ const topic = "user.created"
 type service struct {
 	repo         Repository
 	tokenService Authable
+	Publisher    micro.Publisher
 }
 
 func (srv *service) Get(ctx context.Context, req *pb.User, res *pb.Response) error {
@@ -38,7 +40,7 @@ func (srv *service) GetAll(ctx context.Context, req *pb.Request, res *pb.Respons
 func (srv *service) Auth(ctx context.Context, req *pb.User, res *pb.Token) error {
 	log.Println("Logging in with:", req.Email, req.Password)
 	user, err := srv.repo.GetByEmail(req.Email)
-	log.Println(user, err)
+	log.Println(user)
 	if err != nil {
 		return err
 	}

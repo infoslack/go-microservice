@@ -6,6 +6,7 @@ import (
 
 	pb "github.com/infoslack/go-microservice/user-service/proto/auth"
 	micro "github.com/micro/go-micro"
+	_ "github.com/micro/go-plugins/registry/mdns"
 )
 
 func main() {
@@ -23,15 +24,19 @@ func main() {
 
 	repo := &UserRepository{db}
 
+	tokenService := &TokenService{repo}
+
 	// Create a new service
 	srv := micro.NewService(
-		micro.Name("go.micro.srv.user"),
+		micro.Name("auth"),
 		micro.Version("latest"),
 	)
 
 	srv.Init()
 
-	pb.RegisterUserServiceHandler(srv.Server(), &service{repo})
+	publisher := micro.NewPublisher("user.created", srv.Client())
+
+	pb.RegisterAuthHandler(srv.Server(), &service{repo, tokenService, publisher})
 
 	if err := srv.Run(); err != nil {
 		fmt.Println(err)
